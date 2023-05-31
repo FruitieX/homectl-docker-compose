@@ -1,0 +1,37 @@
+[integrations.hue]
+plugin = "mqtt"
+host = "mosquitto"
+port = 1883
+topic = "home/+/hue/{id}"
+topic_set = "home/lights/hue/{id}/set"
+
+[integrations.mqtt]
+plugin = "mqtt"
+host = "mosquitto"
+port = 1883
+topic = "home/+/dummy/{id}"
+topic_set = "home/lights/dummy/{id}/set"
+
+[scene.lights_on]
+name = "Lights on"
+[scene.lights_on.devices.mqtt]
+"Entryway light" = { power = true }
+
+[scene.lights_off]
+name = "Lights off"
+[scene.lights_off.devices.mqtt]
+"Entryway light" = { power = false }
+
+[routines.arrive]
+name = "Arrive home"
+rules = [
+  { integration_id = "mqtt", name = "On button", state = { value = true } }
+]
+actions = [{ action = "ActivateScene", scene_id = "lights_on" }]
+
+[routines.leave]
+name = "Leave home"
+rules = [
+  { integration_id = "mqtt", name = "Off button", state = { value = true } }
+]
+actions = [{ action = "ActivateScene", scene_id = "lights_off" }]

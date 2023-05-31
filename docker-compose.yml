@@ -1,0 +1,48 @@
+services:
+    postgres:
+        image: postgres:15
+        environment:
+            POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+            - 5432:5432
+
+    mosquitto:
+        image: eclipse-mosquitto:latest
+        command: mosquitto -c /mosquitto-no-auth.conf
+        expose:
+            - 1883
+        ports:
+            - 1883:1883
+
+    homectl-server:
+        image: ghcr.io/fruitiex/homectl-server:main
+        # TODO: Automatically run migrations
+        # environment:
+            # DATABASE_URL: postgresql://postgres@postgres/postgres
+        working_dir: /app
+        volumes:
+            - ${PWD}/homectl-server/Settings.toml:/app/Settings.toml
+        depends_on:
+            - postgres
+            - mosquitto
+        expose:
+            - 45289
+        ports:
+            - 45289:45289
+
+    homectl-next:
+        image: ghcr.io/fruitiex/homectl-next:main
+        volumes:
+            - ${PWD}/homectl-next/.env:/app/.env
+        expose:
+            - 3000
+        ports:
+            - 3000:3000
+
+    hue-mqtt:
+        image: ghcr.io/fruitiex/hue-mqtt:main
+        working_dir: /app
+        volumes:
+            - ${PWD}/hue-mqtt/Settings.toml:/app/Settings.toml
+        depends_on: 
+            - mosquitto
